@@ -8,12 +8,16 @@ import { EmailSubscription } from '../../models/email-subscription.model.js';
 const router = Router();
 
 const updateSubscriptionValidator = [
-  body('subscribed').isBoolean().withMessage('subscribed must be boolean')
+  body('subscribed').isBoolean().withMessage('subscribed must be boolean'),
+  body('email').optional({ values: 'falsy' }).isEmail().withMessage('email must be a valid email address')
 ];
 
 router.get('/me', requireAuth, async (req, res) => {
-  const row = await EmailSubscription.findOne({ user_id: req.auth.sub }, { _id: 0, subscribed: 1 }).lean();
-  return res.json({ subscribed: Boolean(row?.subscribed) });
+  const row = await EmailSubscription.findOne({ user_id: req.auth.sub }, { _id: 0, subscribed: 1, email: 1 }).lean();
+  return res.json({
+    subscribed: Boolean(row?.subscribed),
+    email: row?.email || ''
+  });
 });
 
 router.put('/me', requireAuth, updateSubscriptionValidator, validateRequest, async (req, res) => {
@@ -23,17 +27,23 @@ router.put('/me', requireAuth, updateSubscriptionValidator, validateRequest, asy
   }
 
   const subscribed = Boolean(req.body.subscribed);
+  const requestedEmail = typeof req.body.email === 'string' ? req.body.email.trim().toLowerCase() : '';
+  const email = requestedEmail || user.email;
+
   const updated = await EmailSubscription.findOneAndUpdate(
     { user_id: req.auth.sub },
     {
       user_id: req.auth.sub,
-      email: user.email,
+      email,
       subscribed
     },
-    { upsert: true, new: true, projection: { _id: 0, subscribed: 1 } }
+    { upsert: true, new: true, projection: { _id: 0, subscribed: 1, email: 1 } }
   );
 
-  return res.json({ subscribed: Boolean(updated?.subscribed) });
+  return res.json({
+    subscribed: Boolean(updated?.subscribed),
+    email: updated?.email || ''
+  });
 });
 
 export default router;

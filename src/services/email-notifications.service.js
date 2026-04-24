@@ -8,11 +8,13 @@ function getResendClient() {
     return resendClient;
   }
 
-  if (!process.env.RESEND_API_KEY) {
+  const apiKey = process.env.RESEND_API_KEY || process.env.RESEND_API;
+
+  if (!apiKey) {
     return null;
   }
 
-  resendClient = new Resend(process.env.RESEND_API_KEY);
+  resendClient = new Resend(apiKey);
   return resendClient;
 }
 

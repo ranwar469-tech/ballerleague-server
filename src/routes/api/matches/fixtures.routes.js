@@ -176,7 +176,6 @@ router.patch(
     }
 
     const [enriched] = await enrichMatches([updated]);
-    void notifyMatchUpdated(enriched);
     return res.json(enriched);
   }
 );
@@ -378,6 +377,7 @@ router.patch(
     }
 
     const [enriched] = await enrichMatches([updated]);
+    void notifyMatchUpdated(enriched);
     return res.json(enriched);
   }
 );
