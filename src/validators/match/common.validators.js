@@ -46,8 +46,7 @@ export const createManualMatchValidator = [
   body('venue_details')
     .optional()
     .custom((value) => isValidVenuePayload(value))
-    .withMessage('venue_details must be a valid venue payload'),
-  body('published').optional().isBoolean().withMessage('published must be a boolean')
+    .withMessage('venue_details must be a valid venue payload')
 ];
 
 export const updateMatchScheduleValidator = [
@@ -67,16 +66,6 @@ export const updateMatchStatusValidator = [
     .isIn(['scheduled', 'postponed', 'cancelled', 'completed'])
     .withMessage('status must be scheduled, postponed, cancelled, or completed'),
   body('status_note').optional().trim()
-];
-
-export const publishMatchValidator = [
-  ...matchIdParamValidator,
-  body('published').isBoolean().withMessage('published must be a boolean')
-];
-
-export const publishScheduleValidator = [
-  body('season_id').optional().isInt({ min: 1 }).withMessage('season_id must be a positive integer'),
-  body('published').optional().isBoolean().withMessage('published must be a boolean')
 ];
 
 export const recordMatchResultValidator = [

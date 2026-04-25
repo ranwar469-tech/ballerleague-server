@@ -8,8 +8,6 @@ import { Player } from '../../../models/player.model.js';
 import {
   createManualMatchValidator,
   matchIdParamValidator,
-  publishMatchValidator,
-  publishScheduleValidator,
   recordGoalEventValidator,
   recordMatchResultValidator,
   updateGoalAssistValidator,
@@ -33,7 +31,6 @@ router.get('/upcoming', async (req, res) => {
   const now = new Date();
   const seasonId = req.query.season_id ? Number(req.query.season_id) : null;
   const filter = {
-    published: true,
     status: { $in: ['scheduled', 'postponed'] },
     kickoff_at: { $gte: now }
   };
@@ -51,7 +48,6 @@ router.get('/past', async (req, res) => {
   const now = new Date();
   const seasonId = req.query.season_id ? Number(req.query.season_id) : null;
   const filter = {
-    published: true,
     $or: [{ kickoff_at: { $lt: now } }, { status: { $in: ['completed', 'cancelled'] } }]
   };
 
@@ -114,7 +110,6 @@ router.post(
       venue: normalizedVenue.venue,
       venue_details: normalizedVenue.venue_details,
       kickoff_at: new Date(req.body.kickoff_at),
-      published: req.body.published ?? false,
       created_by: req.auth?.sub || null
     });
 
@@ -434,51 +429,6 @@ router.patch(
 
     const [enriched] = await enrichMatches([updated]);
     return res.json(enriched);
-  }
-);
-
-router.patch(
-  '/:id/publish',
-  requireAuth,
-  requireAnyRole('league_admin', 'system_admin'),
-  publishMatchValidator,
-  validateRequest,
-  async (req, res) => {
-    const matchId = Number(req.params.id);
-    const updated = await Match.findOneAndUpdate(
-      { id: matchId },
-      { published: req.body.published },
-      { new: true, projection: { _id: 0 } }
-    );
-
-    if (!updated) {
-      return res.status(404).json({ message: 'Match not found' });
-    }
-
-    const [enriched] = await enrichMatches([updated]);
-    return res.json(enriched);
-  }
-);
-
-router.post(
-  '/publish',
-  requireAuth,
-  requireAnyRole('league_admin', 'system_admin'),
-  publishScheduleValidator,
-  validateRequest,
-  async (req, res) => {
-    const seasonId = req.body.season_id ? Number(req.body.season_id) : null;
-    const published = typeof req.body.published === 'boolean' ? req.body.published : true;
-
-    const filter = seasonId ? { season_id: seasonId } : {};
-    const result = await Match.updateMany(filter, { published });
-
-    return res.json({
-      success: true,
-      modifiedCount: result.modifiedCount,
-      published,
-      season_id: seasonId
-    });
   }
 );
 

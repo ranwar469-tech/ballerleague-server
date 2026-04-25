@@ -129,10 +129,6 @@ const matchSchema = new mongoose.Schema(
       type: Date,
       default: null
     },
-    published: {
-      type: Boolean,
-      default: false
-    },
     created_by: {
       type: String,
       default: null
