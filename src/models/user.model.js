@@ -1,7 +1,6 @@
 import mongoose from 'mongoose';
 
 export const APP_ROLES = [
-  'participant',
   'league_admin',
   'system_admin',
   'public_user'
@@ -29,11 +28,6 @@ const userSchema = new mongoose.Schema(
       type: [String],
       enum: APP_ROLES,
       default: ['public_user']
-    },
-    participantType: {
-      type: String,
-      enum: ['player', 'coach', null],
-      default: null
     },
     active: {
       type: Boolean,

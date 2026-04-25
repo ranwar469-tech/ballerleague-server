@@ -6,8 +6,7 @@ export const registerValidator = [
   body('email').isEmail().withMessage('email must be valid').normalizeEmail(),
   body('password').isLength({ min: 8 }).withMessage('password must be at least 8 characters long'),
   body('roles').optional().isArray({ min: 1 }).withMessage('roles must be a non-empty array'),
-  body('roles.*').optional().isIn(APP_ROLES).withMessage('invalid role provided'),
-  body('participantType').optional().isIn(['player', 'coach']).withMessage('participantType must be player or coach')
+  body('roles.*').optional().isIn(APP_ROLES).withMessage('invalid role provided')
 ];
 
 export const loginValidator = [
@@ -16,11 +15,7 @@ export const loginValidator = [
 ];
 
 export const updateOwnProfileValidator = [
-  body('displayName').optional().trim().notEmpty().withMessage('displayName cannot be empty'),
-  body('participantType')
-    .optional({ nullable: true })
-    .isIn(['player', 'coach'])
-    .withMessage('participantType must be player or coach')
+  body('displayName').optional().trim().notEmpty().withMessage('displayName cannot be empty')
 ];
 
 export const updateUserSettingsValidator = [
@@ -36,11 +31,7 @@ export const userIdParamValidator = [
 export const updateUserRolesValidator = [
   ...userIdParamValidator,
   body('roles').isArray({ min: 1 }).withMessage('roles must be a non-empty array'),
-  body('roles.*').isIn(APP_ROLES).withMessage('invalid role provided'),
-  body('participantType')
-    .optional({ nullable: true })
-    .isIn(['player', 'coach'])
-    .withMessage('participantType must be player or coach')
+  body('roles.*').isIn(APP_ROLES).withMessage('invalid role provided')
 ];
 
 export const updateUserStatusValidator = [

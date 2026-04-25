@@ -20,7 +20,6 @@ function toUser(userDoc) {
     email: userDoc.email,
     displayName: userDoc.displayName,
     roles: userDoc.roles,
-    participantType: userDoc.participantType,
     active: userDoc.active,
     createdAt: userDoc.createdAt,
     updatedAt: userDoc.updatedAt
@@ -32,22 +31,20 @@ function toTokenClaims(userDoc) {
     sub: userDoc._id.toString(),
     email: userDoc.email,
     displayName: userDoc.displayName,
-    roles: userDoc.roles,
-    participantType: userDoc.participantType
+    roles: userDoc.roles
   };
 }
 
 function getSignupRoles(body, isFirstUser) {
   if (isFirstUser) {
-    return { roles: ['system_admin'], participantType: null };
+    return { roles: ['system_admin'] };
   }
 
   const requested = Array.isArray(body.roles) ? body.roles : [];
-  const allowed = requested.filter((role) => role === 'participant' || role === 'public_user');
+  const allowed = requested.filter((role) => role === 'public_user');
   const roles = allowed.length ? [...new Set(allowed)] : ['public_user'];
-  const participantType = roles.includes('participant') ? body.participantType ?? null : null;
 
-  return { roles, participantType };
+  return { roles };
 }
 
 router.post('/register', registerValidator, validateRequest, async (req, res) => {
@@ -59,17 +56,12 @@ router.post('/register', registerValidator, validateRequest, async (req, res) =>
   const isFirstUser = (await User.estimatedDocumentCount()) === 0;
   const signup = getSignupRoles(req.body, isFirstUser);
 
-  if (signup.roles.includes('participant') && !signup.participantType) {
-    return res.status(400).json({ message: 'participantType is required when role includes participant' });
-  }
-
   const passwordHash = await bcrypt.hash(req.body.password, 12);
   const user = await User.create({
     email: req.body.email,
     displayName: req.body.displayName,
     passwordHash,
-    roles: signup.roles,
-    participantType: signup.participantType
+    roles: signup.roles
   });
 
   const token = signAccessToken(toTokenClaims(user));
@@ -109,14 +101,6 @@ router.patch('/me/profile', requireAuth, updateOwnProfileValidator, validateRequ
 
   if (typeof req.body.displayName === 'string') {
     updates.displayName = req.body.displayName.trim();
-  }
-
-  if (typeof req.body.participantType !== 'undefined') {
-    if (!(req.auth.roles || []).includes('participant')) {
-      return res.status(403).json({ message: 'Only participants can update participantType' });
-    }
-
-    updates.participantType = req.body.participantType;
   }
 
   const user = await User.findByIdAndUpdate(req.auth.sub, updates, { new: true });
@@ -169,17 +153,11 @@ router.patch(
   validateRequest,
   async (req, res) => {
     const roles = [...new Set(req.body.roles)];
-    const participantType = roles.includes('participant') ? req.body.participantType ?? null : null;
-
-    if (roles.includes('participant') && !participantType) {
-      return res.status(400).json({ message: 'participantType is required when assigning participant role' });
-    }
 
     const user = await User.findByIdAndUpdate(
       req.params.id,
       {
-        roles,
-        participantType
+        roles
       },
       { new: true }
     );
