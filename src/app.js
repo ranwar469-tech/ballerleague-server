@@ -5,7 +5,10 @@ import apiRoutes from './routes/api/index.js';
 const app = express();
 
 app.use(cors({
-  origin: ['http://localhost:5173', 'http://127.0.0.1:5173','https://ballerleague.netlify.app'],
+  origin: ['http://localhost:5173', 'http://127.0.0.1:5173', 'https://ballerleague.netlify.app'],
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
 }));
 app.use(express.json());
 app.use('/api', apiRoutes);
